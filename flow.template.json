@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/flow.schema.json",
+  "schemaVersion": 1,
+  "id": "REPLACE-with-kebab-case-id",
+  "title": "REPLACE: short title (max 60 chars)",
+  "summary": "REPLACE: what triggers this flow and what the outcome is.",
+  "tags": ["REPLACE"],
+  "owner": "REPLACE-team",
+  "status": "draft",
+  "lastReviewed": "YYYY-MM-DD",
+  "participants": ["entity-id-1", "entity-id-2"],
+  "steps": [
+    {
+      "id": "s1",
+      "from": "entity-id-1",
+      "to": "entity-id-2",
+      "kind": "sync",
+      "label": "REPLACE: verb-first intent (max 50 chars)",
+      "request": {
+        "protocol": "https",
+        "method": "POST",
+        "endpoint": "/replace/path",
+        "headers": { "content-type": "application/json" },
+        "body": { "example": "fake value" },
+        "bodyFields": [{ "name": "example", "type": "string", "required": true, "description": "REPLACE or delete bodyFields" }]
+      },
+      "response": { "status": 200, "body": { "ok": true } },
+      "errors": [{ "when": "REPLACE: failure condition", "status": 400, "body": { "error": "bad_request" } }],
+      "notes": "Optional. Delete this line if unused."
+    },
+    {
+      "id": "s2",
+      "parent": "s1",
+      "from": "entity-id-2",
+      "to": "entity-id-2",
+      "kind": "internal",
+      "label": "REPLACE: work inside the entity (optional step)"
+    },
+    {
+      "id": "s3",
+      "parent": "s1",
+      "from": "entity-id-2",
+      "to": "entity-id-1",
+      "kind": "async",
+      "label": "REPLACE: event or fire-and-forget message (optional step)",
+      "request": { "protocol": "kafka", "endpoint": "topic.name.v1", "body": { "type": "thing.happened" } }
+    }
+  ]
+}

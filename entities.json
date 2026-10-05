@@ -1,0 +1,11 @@
+{
+  "$schema": "../schemas/entities.schema.json",
+  "schemaVersion": 1,
+  "entities": [
+    { "id": "web-app", "name": "Web App", "kind": "client", "owner": "frontend-team", "description": "Browser single-page app used by customers." },
+    { "id": "api-gateway", "name": "API Gateway", "kind": "gateway", "owner": "platform-team", "description": "Public entry point: routing, rate limiting, request ids." },
+    { "id": "auth-service", "name": "Auth Service", "kind": "service", "owner": "identity-team", "description": "Verifies credentials and issues sessions." },
+    { "id": "user-db", "name": "User DB", "kind": "datastore", "owner": "identity-team", "description": "Primary store for user accounts." },
+    { "id": "event-bus", "name": "Event Bus", "kind": "queue", "owner": "platform-team", "description": "Async domain events." }
+  ]
+}

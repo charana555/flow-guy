@@ -1,0 +1,66 @@
+{
+  "$schema": "../schemas/flow.schema.json",
+  "schemaVersion": 1,
+  "id": "user-login",
+  "title": "User login",
+  "summary": "A customer signs in with email and password and receives a session token.",
+  "tags": ["auth"],
+  "owner": "identity-team",
+  "status": "stable",
+  "lastReviewed": "2026-10-05",
+  "participants": ["web-app", "api-gateway", "auth-service", "user-db", "event-bus"],
+  "steps": [
+    {
+      "id": "s1", "from": "web-app", "to": "api-gateway", "kind": "sync",
+      "label": "Submit credentials",
+      "request": {
+        "protocol": "https", "method": "POST", "endpoint": "/v1/login",
+        "headers": { "content-type": "application/json" },
+        "body": { "email": "user@example.com", "password": "<redacted>" },
+        "bodyFields": [
+          { "name": "email", "type": "string", "required": true },
+          { "name": "password", "type": "string", "required": true }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "set-cookie": "<redacted>" },
+        "body": { "token": "tok_example_123", "expiresIn": 3600 }
+      },
+      "errors": [
+        { "when": "Wrong email or password", "status": 401, "body": { "error": "invalid_credentials" } },
+        { "when": "Rate limit exceeded", "status": 429, "body": { "error": "too_many_requests" } }
+      ]
+    },
+    {
+      "id": "s2", "parent": "s1", "from": "api-gateway", "to": "auth-service", "kind": "sync",
+      "label": "Verify credentials",
+      "request": {
+        "protocol": "grpc", "endpoint": "auth.v1.AuthService/Verify",
+        "headers": { "x-request-id": "req_example_1" },
+        "body": { "email": "user@example.com", "password": "<redacted>" }
+      },
+      "response": { "status": "OK", "body": { "userId": "usr_123", "valid": true } },
+      "errors": [{ "when": "Wrong password", "status": "UNAUTHENTICATED", "body": { "valid": false } }]
+    },
+    {
+      "id": "s3", "parent": "s2", "from": "auth-service", "to": "user-db", "kind": "sync",
+      "label": "Fetch user by email",
+      "request": { "protocol": "sql", "endpoint": "SELECT id, password_hash FROM users WHERE email = $1", "body": { "$1": "user@example.com" } },
+      "response": { "status": "1 row", "body": { "id": "usr_123", "password_hash": "<redacted>" } }
+    },
+    {
+      "id": "s4", "parent": "s2", "from": "auth-service", "to": "auth-service", "kind": "internal",
+      "label": "Compare password hash",
+      "notes": "Argon2id comparison. On success, a session token is minted."
+    },
+    {
+      "id": "s5", "parent": "s2", "from": "auth-service", "to": "event-bus", "kind": "async",
+      "label": "Publish login event",
+      "request": {
+        "protocol": "kafka", "endpoint": "auth.events.v1",
+        "body": { "type": "user.logged_in", "userId": "usr_123", "at": "2026-10-05T10:00:00Z" }
+      }
+    }
+  ]
+}
